@@ -1,0 +1,74 @@
+name: Build Dawn
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    name: Linux Release
+    runs-on: ubuntu-latest
+    container:
+      image: dockcross/manylinux_2_28-x64:latest
+      options: --volume /:/host
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space on Linux host
+        run: |
+          rm -rf /host/usr/share/dotnet
+          rm -rf /host/usr/local/lib/android
+          rm -rf /host/opt/ghc
+
+      - name: Install dependencies
+        run: >
+          dnf install -y
+          mesa-libGL-devel
+          libxcb libxcb-devel
+          libX11-xcb
+          libXcursor-devel
+          libXrandr-devel
+          libXinerama-devel
+          libXi-devel
+          libXext-devel
+          libxkbcommon libxkbcommon-devel libxkbcommon-x11-devel
+          mesa-vulkan-drivers
+          wayland-protocols-devel wayland-devel
+
+      - name: Configure CMake
+        run: >
+          cmake -S . -B out/Release -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=gcc
+          -DCMAKE_CXX_COMPILER=g++
+          -DDAWN_FETCH_DEPENDENCIES=ON
+          -DDAWN_ENABLE_INSTALL=ON
+          -DDAWN_BUILD_MONOLITHIC_LIBRARY=STATIC
+          -DDAWN_USE_WAYLAND=ON
+          -DDAWN_BUILD_SAMPLES=OFF
+          -DDAWN_BUILD_TESTS=OFF
+          -DTINT_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build out/Release
+
+      - name: Package
+        run: |
+          PREFIX="dawn-${{ github.sha }}-linux"
+          cmake --install out/Release --prefix "$PREFIX"
+          cp src/dawn/dawn.json "$PREFIX/"
+          tar czf "$PREFIX.tar.gz" "$PREFIX"
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: dawn-${{ github.sha }}-linux.tar.gz
