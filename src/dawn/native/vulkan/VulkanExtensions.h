@@ -121,6 +121,9 @@ enum class DeviceExt {
     ExternalSemaphoreFD,
     ExternalSemaphoreZirconHandle,
 
+    // DRM device info
+    PhysicalDeviceDrm,
+
     EnumCount,
 };
 

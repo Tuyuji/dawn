@@ -161,6 +161,7 @@ static constexpr std::array<DeviceExtInfo, kDeviceExtCount> sDeviceExtInfos{{
     {DeviceExt::ExternalMemoryHost, "VK_EXT_external_memory_host"},
     {DeviceExt::ExternalSemaphoreFD, "VK_KHR_external_semaphore_fd"},
     {DeviceExt::ExternalSemaphoreZirconHandle, "VK_FUCHSIA_external_semaphore"},
+    {DeviceExt::PhysicalDeviceDrm, "VK_EXT_physical_device_drm"},
     //
 }};
 
@@ -272,6 +273,10 @@ DeviceExtSet EnsureDependencies(const DeviceExtSet& advertisedExts,
 
             case DeviceExt::Maintenance5:
                 hasDependencies = HasDep(DeviceExt::DynamicRendering);
+                break;
+
+            case DeviceExt::PhysicalDeviceDrm:
+                hasDependencies = true;
                 break;
 
             case DeviceExt::EnumCount:

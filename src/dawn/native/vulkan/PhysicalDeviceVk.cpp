@@ -444,6 +444,9 @@ void PhysicalDevice::InitializeSupportedFeaturesImpl() {
 
     EnableFeature(Feature::TransientAttachments);
     EnableFeature(Feature::AdapterPropertiesVk);
+    if (mDeviceInfo.HasExt(DeviceExt::PhysicalDeviceDrm)) {
+        EnableFeature(Feature::AdapterPropertiesDrm);
+    }
     EnableFeature(Feature::DawnLoadResolveTexture);
 
     // Enable Subgroups feature if:
@@ -1551,6 +1554,14 @@ void PhysicalDevice::PopulateBackendProperties(UnpackedPtr<AdapterInfo>& info,
     }
     if (auto* vkProperties = info.Get<AdapterPropertiesVk>()) {
         vkProperties->driverVersion = mDeviceInfo.properties.driverVersion;
+    }
+    if (auto* drmProperties = info.Get<AdapterPropertiesDrm>()) {
+        drmProperties->hasPrimary = mDeviceInfo.drmProperties.hasPrimary;
+        drmProperties->hasRender = mDeviceInfo.drmProperties.hasRender;
+        drmProperties->primaryMajor = mDeviceInfo.drmProperties.primaryMajor;
+        drmProperties->primaryMinor = mDeviceInfo.drmProperties.primaryMinor;
+        drmProperties->renderMajor = mDeviceInfo.drmProperties.renderMajor;
+        drmProperties->renderMinor = mDeviceInfo.drmProperties.renderMinor;
     }
     if (auto* subgroupMatrixConfigs = info.Get<AdapterPropertiesSubgroupMatrixConfigs>()) {
         std::vector<SubgroupMatrixConfig> supportedConfigs =
